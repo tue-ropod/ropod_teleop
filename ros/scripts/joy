@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+import rospy
+from sensor_msgs.msg import Joy
+from geometry_msgs.msg import Twist
+from actionlib_msgs.msg import GoalID
+
+class JoyButtons(object):
+    def __init__(self, button_list):
+        self.a = button_list[0]
+        self.b = button_list[1]
+        self.x = button_list[2]
+        self.y = button_list[3]
+        self.lb = button_list[4]
+        self.rb = button_list[5]
+
+class JoyAxes(object):
+    def __init__(self, axes_list):
+        self.x = axes_list[1]
+        self.y = axes_list[0]
+        self.z = axes_list[4]
+        self.theta = axes_list[3]
+
+class JoyNode(object):
+    def __init__(self):
+        self.joy_topic = rospy.get_param('~joy_topic', '/joy')
+        self.base_vel_topic = rospy.get_param('~base_vel_topic', '/cmd_vel')
+        self.max_linear_vel = float(rospy.get_param('~max_linear_vel', 0.1))
+        self.max_angular_vel = float(rospy.get_param('~max_angular_vel', 0.1))
+        self.cancel_move_base_cmd = rospy.get_param('~cancel_move_base_cmd', False)
+        self.move_base_cancel_topic = rospy.get_param('~move_base_cancel_topic',
+                                                      '/move_base/cancel')
+        self.joy_sub = rospy.Subscriber(self.joy_topic, Joy, self.joy_cmd_cb)
+        self.twist_pub = rospy.Publisher(self.base_vel_topic, Twist, queue_size=1)
+        self.move_base_cancel_pub = rospy.Publisher(self.move_base_cancel_topic,
+                                                    GoalID, queue_size=1)
+
+        self.last_vel_cmd = Twist()
+        self.publish_vel = False
+        while not rospy.is_shutdown():
+            if self.publish_vel:
+                self.twist_pub.publish(self.last_vel_cmd)
+
+    def joy_cmd_cb(self, joy_cmd):
+        buttons = JoyButtons(joy_cmd.buttons)
+        axes = JoyAxes(joy_cmd.axes)
+        if buttons.rb:
+            if self.move_base_cancel_topic:
+                move_base_cancel_msg = GoalID()
+                self.move_base_cancel_pub.publish(move_base_cancel_msg)
+
+            twist_msg = Twist()
+            twist_msg.linear.x = self.max_linear_vel * axes.x
+            twist_msg.linear.y = self.max_linear_vel * axes.y
+            if abs(axes.theta) > 1e-5:
+                if axes.theta > 0.:
+                    twist_msg.angular.z = self.max_angular_vel
+                else:
+                    twist_msg.angular.z = -self.max_angular_vel
+            self.last_vel_cmd = twist_msg
+            self.publish_vel = True
+        else:
+            self.last_vel_cmd = Twist()
+            self.twist_pub.publish(self.last_vel_cmd)
+            self.publish_vel = False
+
+if __name__ == '__main__':
+    rospy.init_node('ropod_joy')
+    JoyNode()
+    rospy.spin()

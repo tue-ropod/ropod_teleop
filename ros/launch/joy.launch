@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="joy" type="joy_node" name="joy" output="screen">
+        <param name="dev" value="/dev/input/js0" />
+    </node>
+
+    <node pkg="ropod_teleop" type="joy" name="ropod_teleop" output="screen">
+        <param name="joy_topic" value="/joy" />
+        <param name="base_vel_topic" value="/ropod/cmd_vel" />
+        <param name="max_linear_vel" value="0.1" />
+        <param name="max_angular_vel" value="0.1" />
+    </node>
+</launch>
