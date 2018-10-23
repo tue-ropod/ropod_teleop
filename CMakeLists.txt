@@ -21,3 +21,7 @@ install(PROGRAMS
   ros/scripts/joy
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/scripts
 )
+
+install(DIRECTORY ros/launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+)
