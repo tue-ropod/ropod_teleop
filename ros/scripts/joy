@@ -40,10 +40,19 @@ class JoyNode(object):
 
         self.last_vel_cmd = Twist()
         self.publish_vel = False
+        self.bringup_requested = False
+        self.bringdown_requested = False
         loop_rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.publish_vel:
                 self.twist_pub.publish(self.last_vel_cmd)
+
+            if self.bringup_requested:
+                self.__bringup()
+                self.bringup_requested = False
+            elif self.bringdown_requested:
+                self.__bringdown()
+                self.bringdown_requested = False
             loop_rate.sleep()
 
     def joy_cmd_cb(self, joy_cmd):
@@ -52,9 +61,9 @@ class JoyNode(object):
         if buttons.rb:
             if buttons.lb:
                 if buttons.a:
-                    self.__bringup()
+                    self.bringup_requested = True
                 elif buttons.x:
-                    self.__bringdown()
+                    self.bringdown_requested = True
 
             if self.move_base_cancel_topic:
                 move_base_cancel_msg = GoalID()
@@ -78,7 +87,7 @@ class JoyNode(object):
     def __bringup(self):
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
-        self.bringup = roslaunch.parent.ROSLaunchParent(uuid, self.bringup_launcher)
+        self.bringup = roslaunch.parent.ROSLaunchParent(uuid, [self.bringup_launcher])
         self.bringup.start()
 
     def __bringdown(self):
