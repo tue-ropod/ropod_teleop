@@ -5,9 +5,12 @@
     </node>
 
     <node pkg="ropod_teleop" type="joy" name="ropod_teleop" output="screen">
-        <param name="joy_topic" value="/ropod/joy" />
-        <param name="base_vel_topic" value="/load/cmd_vel" />
+        <param name="joy_topic" value="/joy" />
+        <param name="base_vel_topic" value="/ropod/cmd_vel" />
         <param name="max_linear_vel" value="1.0" />
         <param name="max_angular_vel" value="1.0" />
+        <param name="bringup_package" value="robot_bringup" />
+        <param name="bringup_launcher" value="start.launch" />
+        <param name="controller_node" value="/ropod/ropod_4wheel_tdistkinb_cntr_hosp_platform_node" />
     </node>
 </launch>
