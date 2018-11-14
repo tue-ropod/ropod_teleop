@@ -9,7 +9,7 @@
         <param name="base_vel_topic" value="/ropod/cmd_vel" />
         <param name="max_linear_vel" value="1.0" />
         <param name="max_angular_vel" value="1.0" />
-        <param name="bringup_package" value="robot_bringup" />
+        <param name="bringup_package" value="ropod_bringup" />
         <param name="bringup_launcher" value="start.launch" />
         <param name="controller_node" value="/ropod/ropod_4wheel_tdistkinb_cntr_hosp_platform_node" />
     </node>
