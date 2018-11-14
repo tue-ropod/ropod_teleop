@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import subprocess
+import roslaunch
 import rospy
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
@@ -30,11 +30,8 @@ class JoyNode(object):
         self.cancel_move_base_cmd = rospy.get_param('~cancel_move_base_cmd', False)
         self.move_base_cancel_topic = rospy.get_param('~move_base_cancel_topic',
                                                       '/move_base/cancel')
-
-        self.bringup_package = rospy.get_param('~bringup_package', 'ropod_bringup')
-        self.bringup_launcher = rospy.get_param('~bringup_launcher', 'start.launch')
-        self.controller_node = rospy.get_param('~controller_node',
-                                               '/ropod/ropod_4wheel_tdistkinb_cntr_hosp_platform_node')
+        self.bringup_launcher = rospy.get_param('~bringup_launcher', '')
+        self.bringup = None
 
         self.joy_sub = rospy.Subscriber(self.joy_topic, Joy, self.joy_cmd_cb)
         self.twist_pub = rospy.Publisher(self.base_vel_topic, Twist, queue_size=1)
@@ -79,10 +76,14 @@ class JoyNode(object):
             self.publish_vel = False
 
     def __bringup(self):
-        subprocess.Popen(['roslaunch', self.bringup_package, self.bringup_launcher])
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        self.bringup = roslaunch.parent.ROSLaunchParent(uuid, self.bringup_launcher)
+        self.bringup.start()
 
     def __bringdown(self):
-        subprocess.Popen(['rosnode', 'kill', self.controller_node])
+        self.bringup.shutdown()
+        self.bringup = None
 
 if __name__ == '__main__':
     rospy.init_node('ropod_joy')
