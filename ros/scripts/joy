@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import roslaunch
 import rospy
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
@@ -29,6 +30,9 @@ class JoyNode(object):
         self.cancel_move_base_cmd = rospy.get_param('~cancel_move_base_cmd', False)
         self.move_base_cancel_topic = rospy.get_param('~move_base_cancel_topic',
                                                       '/move_base/cancel')
+        self.bringup_launcher = rospy.get_param('~bringup_launcher', '')
+        self.bringup = None
+
         self.joy_sub = rospy.Subscriber(self.joy_topic, Joy, self.joy_cmd_cb)
         self.twist_pub = rospy.Publisher(self.base_vel_topic, Twist, queue_size=1)
         self.move_base_cancel_pub = rospy.Publisher(self.move_base_cancel_topic,
@@ -36,16 +40,37 @@ class JoyNode(object):
 
         self.last_vel_cmd = Twist()
         self.publish_vel = False
+
+        self.bringup_requested = False
+        self.bringdown_requested = False
+
+        self.bringup_launched = False
+
         loop_rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.publish_vel:
                 self.twist_pub.publish(self.last_vel_cmd)
+
+            if self.bringup_requested:
+                self.__bringup()
+                self.bringup_requested = False
+                self.bringup_launched = True
+            elif self.bringdown_requested:
+                self.__bringdown()
+                self.bringdown_requested = False
+                self.bringup_launched = False
             loop_rate.sleep()
 
     def joy_cmd_cb(self, joy_cmd):
         buttons = JoyButtons(joy_cmd.buttons)
         axes = JoyAxes(joy_cmd.axes)
         if buttons.rb:
+            if buttons.lb:
+                if buttons.a and not self.bringup_launched:
+                    self.bringup_requested = True
+                elif buttons.x and self.bringup_launched:
+                    self.bringdown_requested = True
+
             if self.move_base_cancel_topic:
                 move_base_cancel_msg = GoalID()
                 self.move_base_cancel_pub.publish(move_base_cancel_msg)
@@ -64,6 +89,16 @@ class JoyNode(object):
             self.last_vel_cmd = Twist()
             self.twist_pub.publish(self.last_vel_cmd)
             self.publish_vel = False
+
+    def __bringup(self):
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        self.bringup = roslaunch.parent.ROSLaunchParent(uuid, [self.bringup_launcher])
+        self.bringup.start()
+
+    def __bringdown(self):
+        self.bringup.shutdown()
+        self.bringup = None
 
 if __name__ == '__main__':
     rospy.init_node('ropod_joy')
