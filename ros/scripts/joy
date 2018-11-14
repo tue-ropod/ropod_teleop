@@ -68,7 +68,7 @@ class JoyNode(object):
             if buttons.lb:
                 if buttons.a and not self.bringup_launched:
                     self.bringup_requested = True
-                elif buttons.x:
+                elif buttons.x and self.bringup_launched:
                     self.bringdown_requested = True
 
             if self.move_base_cancel_topic:
