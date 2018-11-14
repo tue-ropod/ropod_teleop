@@ -40,8 +40,12 @@ class JoyNode(object):
 
         self.last_vel_cmd = Twist()
         self.publish_vel = False
+
         self.bringup_requested = False
         self.bringdown_requested = False
+
+        self.bringup_launched = False
+
         loop_rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.publish_vel:
@@ -50,9 +54,11 @@ class JoyNode(object):
             if self.bringup_requested:
                 self.__bringup()
                 self.bringup_requested = False
+                self.bringup_launched = True
             elif self.bringdown_requested:
                 self.__bringdown()
                 self.bringdown_requested = False
+                self.bringup_launched = False
             loop_rate.sleep()
 
     def joy_cmd_cb(self, joy_cmd):
@@ -60,7 +66,7 @@ class JoyNode(object):
         axes = JoyAxes(joy_cmd.axes)
         if buttons.rb:
             if buttons.lb:
-                if buttons.a:
+                if buttons.a and not self.bringup_launched:
                     self.bringup_requested = True
                 elif buttons.x:
                     self.bringdown_requested = True
