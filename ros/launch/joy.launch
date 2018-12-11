@@ -7,6 +7,7 @@
     <node pkg="ropod_teleop" type="joy" name="ropod_teleop" output="screen">
         <param name="joy_topic" value="/joy" />
         <param name="base_vel_topic" value="/ropod/cmd_vel" />
+        <param name="smart_wheel_command_topic" value="/smart_wheel/command" />
         <param name="max_linear_vel" value="1.0" />
         <param name="max_angular_vel" value="1.0" />
         <param name="bringup_launcher" value="$(find ropod_bringup)/launch/start.launch" />
