@@ -31,7 +31,7 @@ class JoyAxes(object):
 class JoyNode(object):
     def __init__(self):
         self.joy_topic = rospy.get_param('~joy_topic', '/joy')
-        self.number_of_smart_wheels = float(rospy.get_param('~number_of_smart_wheels', 4))
+        self.number_of_smart_wheels = int(rospy.get_param('~number_of_smart_wheels', 4))
         self.base_vel_topic = rospy.get_param('~base_vel_topic', '/cmd_vel')
         self.smart_wheel_command_topic = rospy.get_param('~smart_wheel_command_topic',
                                                          '/smart_wheel/command')
