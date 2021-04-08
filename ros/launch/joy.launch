@@ -13,6 +13,6 @@
         <param name="event_topic" value="/ropod/event" />
         <param name="max_linear_vel" value="1.0" />
         <param name="max_angular_vel" value="1.0" />
-        <param name="bringup_launcher" value="$(find ropod_bringup)/launch/start.launch" />
+        <param name="bringup_launcher" value="$(find ropod_tue_2_bringup)/launch/start.launch" />
     </node>
 </launch>
